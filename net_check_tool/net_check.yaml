@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+
+  tasks:    
+    - name: remove previous log
+      shell: rm -f /tmp/bad_ping.txt
+
+    - name: get the network connection i
+      shell: |
+          ping -I "{{ nic_name }}" -c 2 "{{ hostvars[item[0]]['ansible_' + item[1]].ipv4.address }}"
+      register: netinfo
+      ignore_errors: yes
+      with_nested:
+       - "{{ groups['all'] }}"
+       - ["{{ nic_name }}"]
+      #delegate_to: localhost
+
+    - name: echo the bad_ping ip
+      shell: echo "ip {{ item.cmd }} is bad" >> /tmp/bad_ping.txt
+      with_items:
+       - "{{ netinfo.results }}"
+      when: item.rc != 0
+    
+    - name: fetch bad_ping.txt
+      fetch: src=/tmp/bad_ping.txt dest=/tmp/net_check_result
+

@@ -1,0 +1,32 @@
+---
+- hosts: all
+  gather_facts: yes
+  remote_user: root
+  become: yes
+  become_method: sudo
+ 
+  tasks:
+    #- name: restart acpid service
+    #  service: name=acpid state=restarted  
+    - name: remove previous log
+      shell: rm -f /usr/bad_ping.txt
+
+    - name: get the network connection status
+      shell: |
+          ping -I {{ nic_name }} -c 2 "{{ hostvars[item[0]]['ansible_' + item[1]].ipv4.address }}"
+      register: netinfo
+      ignore_errors: yes
+      with_nested:
+       - "{{ groups['all'] }}"
+       - ["{{ nic_name }}"]
+      #delegate_to: localhost
+
+    - name: echo the bad_ping ip
+      shell: echo "{{ item.cmd }} is bad" >> /usr/bad_ping.txt
+      with_items:
+       - "{{ netinfo.results }}"
+      when: item.rc != 0
+    
+    - name: fetch bad_ping.txt
+      fetch: src=/usr/bad_ping.txt dest=/usr/
+    

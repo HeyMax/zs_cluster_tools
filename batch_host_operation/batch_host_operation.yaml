@@ -1,0 +1,22 @@
+---
+- hosts:  all
+  remote_user: root
+  become: yes
+  become_method: sudo
+
+  tasks:
+    - name: copy script to server
+      copy: src={{ file_path }} dest=/{{ file_path }} mode=755
+
+    - name: run script
+      shell: /bin/bash -x /{{ file_path }}
+
+    - name: delete cache
+      shell: rm -f /{{ file_path }}
+
+#    - name: install the latest version of package
+#      yum:
+#        name: "{{ package }}"
+#        state: latest
+#      tags:
+#        - yum
