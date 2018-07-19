@@ -9,3 +9,4 @@
     
     #自定义ansible.conf文件，来检查非同一集群物理机的网络连通情况  
     ansible-playbook -i ansible.conf net_check.yaml --extra-vars="nic_name=[网卡名]" 
+集群加载二层网络前，可用此工具检查集群物理机指定网卡是否能互相ping通
